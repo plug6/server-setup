@@ -59,8 +59,8 @@ Assert-Command "pm2"
 # =========================
 Write-Host "Installing PostgreSQL..."
 
-$pgInstaller = "postgres.exe"
-$pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-15.6-1-windows-x64.exe"
+$pgInstaller = "postgresql-18.3.exe"
+$pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
 
 Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-15"
 
@@ -83,13 +83,14 @@ Assert-Command "psql"
 Write-Host "Installing Nginx..."
 
 $nginxZip = "nginx.zip"
-$nginxUrl = "https://nginx.org/download/nginx-1.28.0.zip"
+# https://nginx.org/en/download.html
+$nginxUrl = "https://nginx.org/download/nginx-1.30.0.zip"
 
 Invoke-WebRequest $nginxUrl -OutFile $nginxZip
 
 Expand-Archive $nginxZip -DestinationPath "C:\" -Force
 
-Rename-Item "C:\nginx-1.28.0" $NGINX_DIR -ErrorAction SilentlyContinue
+Rename-Item "C:\nginx-1.30.0" $NGINX_DIR -ErrorAction SilentlyContinue
 
 $env:Path += ";$NGINX_DIR"
 
@@ -108,8 +109,11 @@ Set-Location $BASE_DIR
 # =========================
 Write-Host "Cloning repositories..."
 
-git clone https://your-repo/backend.git backend
-git clone https://your-repo/frontend.git frontend
+Write-Host "Cloning Backend Repo"
+git clone git@github.com:vishaltools-it/hana-insight.git backend
+
+Write-Host "Cloning Frontend Repo"
+git clone git@github.com:vishaltools-it/hana-insight-ui.git frontend
 
 # =========================
 # FINAL CHECK
