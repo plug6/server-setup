@@ -24,12 +24,30 @@ function Assert-Command($cmd) {
     }
 }
 
-function Download-And-Install($url, $outfile, $args) {
+function Download-And-Install($url, $outfile, $installArgs) {
+
     Write-Host "Downloading $outfile ..."
+
     Invoke-WebRequest $url -OutFile $outfile
 
+    if (!(Test-Path $outfile)) {
+        throw "$outfile download failed"
+    }
+
+    Unblock-File ".\$outfile"
+
     Write-Host "Installing $outfile ..."
-    Start-Process $outfile -ArgumentList $args -Wait -NoNewWindow
+
+    $process = Start-Process ".\$outfile" `
+        -ArgumentList $installArgs `
+        -Wait `
+        -PassThru
+
+    Write-Host "Installer Exit Code: $($process.ExitCode)"
+
+    if ($process.ExitCode -ne 0) {
+        throw "$outfile installer failed with exit code $($process.ExitCode)"
+    }
 }
 
 try {
