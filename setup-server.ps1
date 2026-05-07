@@ -101,13 +101,32 @@ try {
 
     Refresh-Path
 
-    if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
-        Write-Host "WARNING: psql not found in PATH. Adding manually..."
+    $pgPath = "C:\Program Files\PostgreSQL\18\bin"
 
-        $pgPath = "C:\Program Files\PostgreSQL\18\bin"
-        if (Test-Path $pgPath) {
+    if (Test-Path $pgPath) {
+
+        # Add to current session
+        if ($env:Path -notlike "*$pgPath*") {
             $env:Path += ";$pgPath"
         }
+
+        # Add permanently to system PATH
+        $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+
+        if ($machinePath -notlike "*$pgPath*") {
+
+            [Environment]::SetEnvironmentVariable(
+                "Path",
+                "$machinePath;$pgPath",
+                "Machine"
+            )
+
+            Write-Host "PostgreSQL PATH added permanently." -ForegroundColor Green
+        }
+
+    }
+    else {
+        throw "PostgreSQL bin directory not found: $pgPath"
     }
 
     Assert-Command "psql"
