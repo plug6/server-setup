@@ -82,9 +82,9 @@ try {
     $pgInstaller = "postgresql-18.3.exe"
     $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
 
-    #$pgPassword = Read-Host "Enter postgres password"
+    $pgPassword = Read-Host "Enter postgres password"
 
-    Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-18"
+    Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword $pgPassword --servicename postgresql-x64-18"
 
     Refresh-Path
 
