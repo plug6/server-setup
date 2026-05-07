@@ -97,6 +97,34 @@ $env:Path += ";$NGINX_DIR"
 Assert-Command "nginx"
 
 # =========================
+# Generate SSH key
+# =========================
+
+$email = Read-Host "Enter GitHub Key/Email label"
+
+ssh-keygen -t ed25519 -C $email
+
+Write-Host ""
+Write-Host "=========================================" -ForegroundColor Cyan
+Write-Host "COPY THIS SSH PUBLIC KEY TO GITHUB:" -ForegroundColor Yellow
+Write-Host "=========================================" -ForegroundColor Cyan
+
+Get-Content "$HOME\.ssh\id_ed25519.pub"
+
+Write-Host ""
+Write-Host "GitHub SSH Key Page:"
+Write-Host "https://github.com/settings/keys"
+Write-Host ""
+
+Start-Process "https://github.com/settings/keys"
+
+Read-Host "Press ENTER after adding the SSH key to GitHub"
+
+Write-Host ""
+Write-Host "Testing GitHub SSH connection..."
+ssh -T git@github.com
+
+# =========================
 # CREATE PROJECT STRUCTURE
 # =========================
 Write-Host "Creating project directories..."
