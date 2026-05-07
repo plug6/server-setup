@@ -88,15 +88,14 @@ try {
         $pgPassword = "postgres"
     }
 
-    $pgInstallArgs = @(
-        "--mode unattended"
-        "--unattendedmodeui minimal"
-        "--superpassword $pgPassword"
-        "--servicename postgresql-x64-18"
-        "--disable-components stackbuilder,pgAdmin"
-        "--create_shortcuts 0"
+    $pgInstallArgs =
+        "--mode unattended " +
+        "--unattendedmodeui minimal " +
+        "--superpassword $pgPassword " +
+        "--servicename postgresql-x64-18 " +
+        "--disable-components stackbuilder,pgAdmin " +
+        "--create_shortcuts 0 " +
         "--enable_acledit 1"
-    ) -join " "
 
     Download-And-Install $pgUrl $pgInstaller $pgInstallArgs
 
