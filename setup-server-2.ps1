@@ -32,130 +32,157 @@ function Download-And-Install($url, $outfile, $args) {
     Start-Process $outfile -ArgumentList $args -Wait -NoNewWindow
 }
 
-# =========================
-# INSTALL GIT + NODE (winget)
-# =========================
-Write-Host "Installing Git via winget..."
-winget install --id Git.Git -e --accept-package-agreements --accept-source-agreements --silent
+try {
+    # =========================
+    # INSTALL GIT + NODE (winget)
+    # =========================
+    Write-Host "Installing Git via winget..."
+    winget install --id Git.Git -e --accept-package-agreements --accept-source-agreements --silent
 
-Write-Host "Installing Node via winget..."
-winget install --id OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements --silent
+    Write-Host "Installing Node via winget..."
+    winget install --id OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements --silent
 
-Start-Sleep 3
-Refresh-Path
+    Start-Sleep 3
+    Refresh-Path
 
-Assert-Command "git"
-Assert-Command "node"
-Assert-Command "npm"
+    Assert-Command "git"
+    Assert-Command "node"
+    Assert-Command "npm"
 
-# =========================
-# INSTALL PM2
-# =========================
-Write-Host "Installing PM2..."
-npm install -g pm2
-Assert-Command "pm2"
+    # =========================
+    # INSTALL PM2
+    # =========================
+    Write-Host "Installing PM2..."
+    npm install -g pm2
+    Assert-Command "pm2"
 
-# =========================
-# INSTALL POSTGRESQL (DIRECT)
-# =========================
-Write-Host "Installing PostgreSQL..."
+    # =========================
+    # INSTALL POSTGRESQL (DIRECT)
+    # =========================
+    Write-Host "Installing PostgreSQL..."
 
-$pgInstaller = "postgresql-18.3.exe"
-$pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
+    $pgInstaller = "postgresql-18.3.exe"
+    $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
 
-Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-18"
+    #$pgPassword = Read-Host "Enter postgres password"
 
-Refresh-Path
+    Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-18"
 
-if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
-    Write-Host "WARNING: psql not found in PATH. Adding manually..."
+    Refresh-Path
 
-    $pgPath = "C:\Program Files\PostgreSQL\18\bin"
-    if (Test-Path $pgPath) {
-        $env:Path += ";$pgPath"
+    if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
+        Write-Host "WARNING: psql not found in PATH. Adding manually..."
+
+        $pgPath = "C:\Program Files\PostgreSQL\18\bin"
+        if (Test-Path $pgPath) {
+            $env:Path += ";$pgPath"
+        }
     }
+
+    Assert-Command "psql"
+
+    # =========================
+    # INSTALL NGINX (ZIP METHOD)
+    # =========================
+    Write-Host "Installing Nginx..."
+
+    $nginxZip = "nginx.zip"
+    # https://nginx.org/en/download.html
+    $nginxUrl = "https://nginx.org/download/nginx-1.30.0.zip"
+
+    Invoke-WebRequest $nginxUrl -OutFile $nginxZip
+
+    Expand-Archive $nginxZip -DestinationPath "C:\" -Force
+
+    Rename-Item "C:\nginx-1.30.0" $NGINX_DIR -ErrorAction SilentlyContinue
+
+    $env:Path += ";$NGINX_DIR"
+
+    Assert-Command "nginx"
+
+    # =========================
+    # Generate SSH key
+    # =========================
+
+    $email = Read-Host "Enter GitHub Key/Email label"
+
+    ssh-keygen -t ed25519 -C $email
+
+    Write-Host ""
+    Write-Host "=========================================" -ForegroundColor Cyan
+    Write-Host "COPY THIS SSH PUBLIC KEY TO GITHUB:" -ForegroundColor Yellow
+    Write-Host "=========================================" -ForegroundColor Cyan
+
+    Get-Content "$HOME\.ssh\id_ed25519.pub"
+
+    Write-Host ""
+    Write-Host "GitHub SSH Key Page:"
+    Write-Host "https://github.com/settings/keys"
+    Write-Host ""
+
+    Start-Process "https://github.com/settings/keys"
+
+    Read-Host "Press ENTER after adding the SSH key to GitHub"
+
+    Write-Host ""
+    Write-Host "Testing GitHub SSH connection..."
+    ssh -T git@github.com
+
+    # =========================
+    # CREATE PROJECT STRUCTURE
+    # =========================
+    Write-Host "Creating project directories..."
+
+    New-Item -ItemType Directory -Force -Path $BASE_DIR
+    Set-Location $BASE_DIR
+
+    # =========================
+    # CLONE REPOS (EDIT THESE)
+    # =========================
+    Write-Host "Cloning repositories..."
+
+    Write-Host "Cloning Backend Repo"
+    git clone git@github.com:vishaltools-it/hana-insight.git backend
+
+    Write-Host "Cloning Frontend Repo"
+    git clone git@github.com:vishaltools-it/hana-insight-ui.git frontend
+
+    # =========================
+    # FINAL CHECK
+    # =========================
+    Write-Host "Verifying installations..."
+
+    git --version
+    node -v
+    npm -v
+    pm2 -v
+    psql --version
+    nginx -v
+
+    Write-Host "Setup completed successfully." -ForegroundColor Green
+
 }
+catch {
+    Write-Host ""
+    Write-Host "=========================================" -ForegroundColor Red
+    Write-Host "SETUP FAILED" -ForegroundColor Red
+    Write-Host "=========================================" -ForegroundColor Red
 
-Assert-Command "psql"
+    Write-Host ""
+    Write-Host "Error Message:" -ForegroundColor Yellow
+    Write-Host $_.Exception.Message -ForegroundColor Red
 
-# =========================
-# INSTALL NGINX (ZIP METHOD)
-# =========================
-Write-Host "Installing Nginx..."
+    Write-Host ""
+    Write-Host "Full Error:" -ForegroundColor Yellow
+    Write-Host $_ -ForegroundColor Red
 
-$nginxZip = "nginx.zip"
-# https://nginx.org/en/download.html
-$nginxUrl = "https://nginx.org/download/nginx-1.30.0.zip"
+    Write-Host ""
+    Write-Host "Stack Trace:" -ForegroundColor Yellow
+    Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
 
-Invoke-WebRequest $nginxUrl -OutFile $nginxZip
-
-Expand-Archive $nginxZip -DestinationPath "C:\" -Force
-
-Rename-Item "C:\nginx-1.30.0" $NGINX_DIR -ErrorAction SilentlyContinue
-
-$env:Path += ";$NGINX_DIR"
-
-Assert-Command "nginx"
-
-# =========================
-# Generate SSH key
-# =========================
-
-$email = Read-Host "Enter GitHub Key/Email label"
-
-ssh-keygen -t ed25519 -C $email
-
-Write-Host ""
-Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "COPY THIS SSH PUBLIC KEY TO GITHUB:" -ForegroundColor Yellow
-Write-Host "=========================================" -ForegroundColor Cyan
-
-Get-Content "$HOME\.ssh\id_ed25519.pub"
-
-Write-Host ""
-Write-Host "GitHub SSH Key Page:"
-Write-Host "https://github.com/settings/keys"
-Write-Host ""
-
-Start-Process "https://github.com/settings/keys"
-
-Read-Host "Press ENTER after adding the SSH key to GitHub"
-
-Write-Host ""
-Write-Host "Testing GitHub SSH connection..."
-ssh -T git@github.com
-
-# =========================
-# CREATE PROJECT STRUCTURE
-# =========================
-Write-Host "Creating project directories..."
-
-New-Item -ItemType Directory -Force -Path $BASE_DIR
-Set-Location $BASE_DIR
-
-# =========================
-# CLONE REPOS (EDIT THESE)
-# =========================
-Write-Host "Cloning repositories..."
-
-Write-Host "Cloning Backend Repo"
-git clone git@github.com:vishaltools-it/hana-insight.git backend
-
-Write-Host "Cloning Frontend Repo"
-git clone git@github.com:vishaltools-it/hana-insight-ui.git frontend
-
-# =========================
-# FINAL CHECK
-# =========================
-Write-Host "Verifying installations..."
-
-git --version
-node -v
-npm -v
-pm2 -v
-psql --version
-nginx -v
-
-Write-Host "Setup completed successfully." -ForegroundColor Green
-
-Stop-Transcript
+    Write-Host ""
+    Read-Host "Press ENTER to exit"
+}
+finally {
+    Stop-Transcript
+}
