@@ -82,9 +82,22 @@ try {
     $pgInstaller = "postgresql-18.3.exe"
     $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
 
-    #$pgPassword = Read-Host "Enter postgres password"
+    $pgPassword = Read-Host "Enter postgres password [default: postgres]"
 
-    Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-18"
+    if ([string]::IsNullOrWhiteSpace($pgPassword)) {
+        $pgPassword = "postgres"
+    }
+
+    $pgInstallArgs =
+        "--mode unattended " +
+        "--unattendedmodeui minimal " +
+        "--superpassword $pgPassword " +
+        "--servicename postgresql-x64-18 " +
+        "--disable-components stackbuilder,pgAdmin " +
+        "--create_shortcuts 0 " +
+        "--enable_acledit 1"
+
+    Download-And-Install $pgUrl $pgInstaller $pgInstallArgs
 
     Refresh-Path
 
@@ -178,6 +191,8 @@ try {
     nginx -v
 
     Write-Host "Setup completed successfully." -ForegroundColor Green
+    Write-Host ""
+    Read-Host "Press ENTER to exit"
 
 }
 catch {
