@@ -35,9 +35,10 @@ function Download-And-Install($url, $outfile, $args) {
 # =========================
 # INSTALL GIT + NODE (winget)
 # =========================
-Write-Host "Installing Git + Node via winget..."
-
+Write-Host "Installing Git via winget..."
 winget install --id Git.Git -e --accept-package-agreements --accept-source-agreements --silent
+
+Write-Host "Installing Node via winget..."
 winget install --id OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements --silent
 
 Start-Sleep 3
@@ -62,14 +63,14 @@ Write-Host "Installing PostgreSQL..."
 $pgInstaller = "postgresql-18.3.exe"
 $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
 
-Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-15"
+Download-And-Install $pgUrl $pgInstaller "--mode unattended --unattendedmodeui minimal --superpassword postgres --servicename postgresql-x64-18"
 
 Refresh-Path
 
 if (-not (Get-Command "psql" -ErrorAction SilentlyContinue)) {
     Write-Host "WARNING: psql not found in PATH. Adding manually..."
 
-    $pgPath = "C:\Program Files\PostgreSQL\15\bin"
+    $pgPath = "C:\Program Files\PostgreSQL\18\bin"
     if (Test-Path $pgPath) {
         $env:Path += ";$pgPath"
     }
