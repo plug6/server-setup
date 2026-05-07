@@ -3,6 +3,7 @@
 # =========================
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
+Set-Location $PSScriptRoot
 
 $BASE_DIR = "C:\apps\insight"
 $NGINX_DIR = "C:\nginx"
@@ -154,14 +155,21 @@ try {
     # Generate SSH key
     # =========================
 
-    $email = Read-Host "Enter GitHub Key/Email label"
+    do {
+        $keyLabel = (Read-Host "Enter SSH Key label").Trim()
 
-    ssh-keygen -t ed25519 -C $email
+        if ([string]::IsNullOrWhiteSpace($keyLabel)) {
+            Write-Host "Key label cannot be empty." -ForegroundColor Yellow
+        }
+
+    } while ([string]::IsNullOrWhiteSpace($keyLabel))
+
+    ssh-keygen -t ed25519 -C $keyLabel
 
     Write-Host ""
-    Write-Host "=========================================" -ForegroundColor Cyan
+    Write-Host "===================================" -ForegroundColor Cyan
     Write-Host "COPY THIS SSH PUBLIC KEY TO GITHUB:" -ForegroundColor Yellow
-    Write-Host "=========================================" -ForegroundColor Cyan
+    Write-Host "===================================" -ForegroundColor Cyan
 
     Get-Content "$HOME\.ssh\id_ed25519.pub"
 
@@ -196,6 +204,9 @@ try {
 
     Write-Host "Cloning Frontend Repo"
     git clone git@github.com:vishaltools-it/hana-insight-ui.git frontend
+
+    Write-Host "Cloning Semi-Auto-Update Repo"
+    git clone https://github.com/plug6/hi-semi-auto-update.git semi-auto-update
 
     # =========================
     # FINAL CHECK
