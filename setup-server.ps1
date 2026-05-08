@@ -91,7 +91,7 @@ try {
     Download-And-Install $gitUrl $gitInstaller "/VERYSILENT /NORESTART"
 
     Write-Host "NODE"
-    Download-And-Install $nodeUrl $nodeInstaller "/VERYSILENT /NORESTART"
+    Download-And-Install $nodeUrl $nodeInstaller "/quiet /norestart"
 
     Start-Sleep 3
     Refresh-Path
@@ -245,13 +245,19 @@ try {
     Write-Host ("[OK] NPM         : " + (npm -v)) -ForegroundColor Green
     Write-Host ("[OK] PM2         : " + (pm2 -v)) -ForegroundColor Green
     Write-Host ("[OK] PostgreSQL  : " + (psql --version)) -ForegroundColor Green
-    $nginxVersion = nginx -v 2>&1
+
+    # Temprarory stoping error action preference for nginx
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $nginxVersion = cmd /c "`"$NGINX_DIR\nginx.exe`" -v" 2>&1
+    $ErrorActionPreference = $oldErrorActionPreference
+
     Write-Host ("[OK] Nginx       : " + $nginxVersion) -ForegroundColor Green
 
     Write-Host ""
-    Write-Host "┌────────────────────────────────┐" -ForegroundColor Green
-    Write-Host "│  SETUP COMPLETED SUCCESSFULLY  │" -ForegroundColor Green
-    Write-Host "└────────────────────────────────┘" -ForegroundColor Green
+    Write-Host "+--------------------------------+" -ForegroundColor Green
+    Write-Host "|  SETUP COMPLETED SUCCESSFULLY  |" -ForegroundColor Green
+    Write-Host "+--------------------------------+" -ForegroundColor Green
 }
 catch {
     Write-Host ""
