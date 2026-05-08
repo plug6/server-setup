@@ -135,7 +135,7 @@ will be used.
 Example:
 
 ```txt
-your-email@example.com
+testServerName
 ```
 
 The script will:

@@ -211,19 +211,22 @@ try {
     # =========================
     # FINAL CHECK
     # =========================
-    Write-Host "Verifying installations..."
+    Write-Host "===================================" -ForegroundColor Cyan
+    Write-Host "Verifying Installations" -ForegroundColor Cyan
+    Write-Host "===================================" -ForegroundColor Cyan
 
-    git --version
-    node -v
-    npm -v
-    pm2 -v
-    psql --version
-    nginx -v
+    Write-Host ("[OK] Git         : " + (git --version)) -ForegroundColor Green
+    Write-Host ("[OK] Node.js     : " + (node -v)) -ForegroundColor Green
+    Write-Host ("[OK] NPM         : " + (npm -v)) -ForegroundColor Green
+    Write-Host ("[OK] PM2         : " + (pm2 -v)) -ForegroundColor Green
+    Write-Host ("[OK] PostgreSQL  : " + (psql --version)) -ForegroundColor Green
+    $nginxVersion = nginx -v 2>&1
+    Write-Host ("[OK] Nginx       : " + $nginxVersion) -ForegroundColor Green
 
-    Write-Host "Setup completed successfully." -ForegroundColor Green
     Write-Host ""
-    Read-Host "Press ENTER to exit"
-
+Write-Host "┌────────────────────────────────┐" -ForegroundColor Green
+Write-Host "│  SETUP COMPLETED SUCCESSFULLY  │" -ForegroundColor Green
+Write-Host "└────────────────────────────────┘" -ForegroundColor Green
 }
 catch {
     Write-Host ""
@@ -242,9 +245,6 @@ catch {
     Write-Host ""
     Write-Host "Stack Trace:" -ForegroundColor Yellow
     Write-Host $_.ScriptStackTrace -ForegroundColor DarkGray
-
-    Write-Host ""
-    Read-Host "Press ENTER to exit"
 }
 finally {
     Stop-Transcript
