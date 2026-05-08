@@ -8,9 +8,8 @@ This script installs and configures the required development/runtime dependencie
 # Features
 
 * Installs:
-
-  * Git
-  * Node.js LTS
+  * Git (2.54.0)
+  * Node.js (24.15.0)
   * PM2
   * PostgreSQL 18
   * Nginx
@@ -40,7 +39,7 @@ C:\apps\insight\
 
 # Requirements
 
-* Windows 10/11
+* Windows 10/11 or Windows Server (2019, 2022, 2025 recommended)
 * Run installer with Administrator privileges
 * Internet connection
 * GitHub account access to private repositories
@@ -51,8 +50,8 @@ C:\apps\insight\
 
 | Component     | Installation Method |
 | ------------- | ------------------- |
-| Git           | winget              |
-| Node.js LTS   | winget              |
+| Git           | Direct installer    |
+| Node.js       | Direct installer    |
 | PM2           | npm                 |
 | PostgreSQL 18 | Direct installer    |
 | Nginx         | ZIP extraction      |
@@ -218,16 +217,6 @@ The script includes:
 
 # Notes
 
-## Winget Required
-
-The script depends on:
-
-```txt
-winget
-```
-
-Ensure App Installer is available on Windows.
-
 ---
 
 ## GitHub SSH Authentication
@@ -266,14 +255,6 @@ Potential additions:
 ---
 
 # Troubleshooting
-
-## `winget` not found
-
-Install:
-
-[Microsoft App Installer](https://apps.microsoft.com/detail/9nblggh4nns1?utm_source=chatgpt.com)
-
----
 
 ## `psql not recognized`
 

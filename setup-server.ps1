@@ -1,6 +1,6 @@
-# =========================
+# ===========================
 # CONFIG
-# =========================
+# ===========================
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 Set-Location $PSScriptRoot
@@ -9,9 +9,27 @@ $BASE_DIR = "C:\apps\insight"
 $NGINX_DIR = "C:\nginx"
 $LOG_FILE = "C:\setup-log.txt"
 
-# =========================
+# ===========================
+# DIRECT DOWNLOADS URLs
+# ===========================
+
+# https://github.com/git-for-windows/git/releases
+$gitInstaller = "Git-2.54.0-64-bit.exe"
+$gitUrl = "https://github.com/git-for-windows/git/releases/download/v2.54.0.windows.1/Git-2.54.0-64-bit.exe"
+
+$nodeInstaller = "node-v24.15.0-x64.msi"
+$nodeUrl = "https://nodejs.org/dist/v24.15.0/node-v24.15.0-x64.msi"
+
+$pgInstaller = "postgresql-18.3.exe"
+$pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
+
+# https://nginx.org/en/download.html
+$nginxZip = "nginx-1.30.0.zip"
+$nginxUrl = "https://nginx.org/download/nginx-1.30.0.zip"
+
+# ===========================
 # LOGGING
-# =========================
+# ===========================
 Start-Transcript -Path $LOG_FILE -Append
 
 function Refresh-Path {
@@ -39,10 +57,23 @@ function Download-And-Install($url, $outfile, $installArgs) {
 
     Write-Host "Installing $outfile ..."
 
-    $process = Start-Process ".\$outfile" `
-        -ArgumentList $installArgs `
-        -Wait `
-        -PassThru
+    $fileExtension = [System.IO.Path]::GetExtension($outfile)
+
+    if ($fileExtension -eq ".msi") {
+
+        $process = Start-Process "msiexec.exe" `
+            -ArgumentList "/i `"$outfile`" $installArgs" `
+            -Wait `
+            -PassThru
+
+    }
+    else {
+
+        $process = Start-Process ".\$outfile" `
+            -ArgumentList $installArgs `
+            -Wait `
+            -PassThru
+    }
 
     Write-Host "Installer Exit Code: $($process.ExitCode)"
 
@@ -52,14 +83,15 @@ function Download-And-Install($url, $outfile, $installArgs) {
 }
 
 try {
-    # =========================
-    # INSTALL GIT + NODE (winget)
-    # =========================
-    Write-Host "Installing Git via winget..."
-    winget install --id Git.Git -e --accept-package-agreements --accept-source-agreements --silent
+    # ===========================
+    # INSTALL GIT + NODE
+    # ===========================
 
-    Write-Host "Installing Node via winget..."
-    winget install --id OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements --silent
+    Write-Host "GIT"
+    Download-And-Install $gitUrl $gitInstaller "/VERYSILENT /NORESTART"
+
+    Write-Host "NODE"
+    Download-And-Install $nodeUrl $nodeInstaller "/VERYSILENT /NORESTART"
 
     Start-Sleep 3
     Refresh-Path
@@ -68,20 +100,17 @@ try {
     Assert-Command "node"
     Assert-Command "npm"
 
-    # =========================
+    # ===========================
     # INSTALL PM2
-    # =========================
+    # ===========================
     Write-Host "Installing PM2..."
     npm install -g pm2
     Assert-Command "pm2"
 
-    # =========================
+    # ===========================
     # INSTALL POSTGRESQL (DIRECT)
-    # =========================
+    # ===========================
     Write-Host "Installing PostgreSQL..."
-
-    $pgInstaller = "postgresql-18.3.exe"
-    $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-18.3-3-windows-x64.exe"
 
     $pgPassword = Read-Host "Enter postgres password [default: postgres]"
 
@@ -132,14 +161,10 @@ try {
 
     Assert-Command "psql"
 
-    # =========================
+    # ===========================
     # INSTALL NGINX (ZIP METHOD)
-    # =========================
+    # ===========================
     Write-Host "Installing Nginx..."
-
-    $nginxZip = "nginx.zip"
-    # https://nginx.org/en/download.html
-    $nginxUrl = "https://nginx.org/download/nginx-1.30.0.zip"
 
     Invoke-WebRequest $nginxUrl -OutFile $nginxZip
 
@@ -151,9 +176,9 @@ try {
 
     Assert-Command "nginx"
 
-    # =========================
+    # ===========================
     # Generate SSH key
-    # =========================
+    # ===========================
 
     do {
         $keyLabel = (Read-Host "Enter SSH Key label").Trim()
@@ -186,17 +211,17 @@ try {
     Write-Host "Testing GitHub SSH connection..."
     ssh -T git@github.com
 
-    # =========================
+    # ===========================
     # CREATE PROJECT STRUCTURE
-    # =========================
+    # ===========================
     Write-Host "Creating project directories..."
 
     New-Item -ItemType Directory -Force -Path $BASE_DIR
     Set-Location $BASE_DIR
 
-    # =========================
+    # ===========================
     # CLONE REPOS (EDIT THESE)
-    # =========================
+    # ===========================
     Write-Host "Cloning repositories..."
 
     Write-Host "Cloning Backend Repo"
@@ -208,9 +233,9 @@ try {
     Write-Host "Cloning Semi-Auto-Update Repo"
     git clone https://github.com/plug6/hi-semi-auto-update.git semi-auto-update
 
-    # =========================
+    # ===========================
     # FINAL CHECK
-    # =========================
+    # ===========================
     Write-Host "===================================" -ForegroundColor Cyan
     Write-Host "Verifying Installations" -ForegroundColor Cyan
     Write-Host "===================================" -ForegroundColor Cyan
@@ -224,9 +249,9 @@ try {
     Write-Host ("[OK] Nginx       : " + $nginxVersion) -ForegroundColor Green
 
     Write-Host ""
-Write-Host "┌────────────────────────────────┐" -ForegroundColor Green
-Write-Host "│  SETUP COMPLETED SUCCESSFULLY  │" -ForegroundColor Green
-Write-Host "└────────────────────────────────┘" -ForegroundColor Green
+    Write-Host "┌────────────────────────────────┐" -ForegroundColor Green
+    Write-Host "│  SETUP COMPLETED SUCCESSFULLY  │" -ForegroundColor Green
+    Write-Host "└────────────────────────────────┘" -ForegroundColor Green
 }
 catch {
     Write-Host ""
